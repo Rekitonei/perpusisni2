@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "583582200536",
+    "project_id": "perpus-isni-002",
+    "storage_bucket": "perpus-isni-002.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583582200536:android:b6ed6bbe5a50c007981dad",
+        "android_client_info": {
+          "package_name": "com.example.perpus_isni2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGMi1Gy9ujfe1xyRFvQcK-uT2ZP917vLM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
