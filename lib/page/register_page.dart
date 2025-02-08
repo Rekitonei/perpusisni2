@@ -16,6 +16,8 @@ class ResgisterPage extends StatefulWidget {
 
 class _ResgiterPageState extends State<ResgisterPage> {
   GetStorage box = GetStorage();
+  bool password = true;
+  bool konfirmasi = true;
 
   TextEditingController usernameController = TextEditingController(),
   emailController = TextEditingController(),
@@ -99,16 +101,30 @@ class _ResgiterPageState extends State<ResgisterPage> {
             ),
             TextFormField(
               controller: passwordController,
+              obscureText: password,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Password',
+                 suffixIcon: IconButton(
+                  onPressed: () => setState(() => password = !password),
+                  icon: Icon(password
+                      ? Icons.remove_red_eye
+                      : Icons.remove_red_eye_outlined),
+                ),
               ),
             ),
             TextFormField(
               controller: confirmController,
+              obscureText: konfirmasi,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Konfirmasi Password',
+                 suffixIcon: IconButton(
+                  onPressed: () => setState(() => konfirmasi = !konfirmasi),
+                  icon: Icon(konfirmasi
+                      ? Icons.remove_red_eye
+                      : Icons.remove_red_eye_outlined),
+                ),
               ),
             ),
             TextFormField(

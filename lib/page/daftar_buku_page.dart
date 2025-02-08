@@ -15,6 +15,7 @@ class DaftarBukuPage extends StatefulWidget {
 
 class _DaftarBukuPageState extends State<DaftarBukuPage> {
   List<Map<String, dynamic>> dataBuku = [];
+  List idBukuFirebase = [];
 
   @override
   void initState() {
@@ -39,6 +40,34 @@ class _DaftarBukuPageState extends State<DaftarBukuPage> {
     }
   }
 
+  void validationDelete(String idFirebase) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('Ingin Menghapus Buku ini?'),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text('Tidak'),
+          ),
+          TextButton(
+            onPressed: () => deleteBuku(idFirebase),
+            child: Text('Iya'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void deleteBuku(String idFirebase) {
+    try {
+      FirebaseFirestore.instance.collection('buku').doc(idFirebase).delete();
+    } catch (e) {
+      log('Gagal Hapus Buku');
+    }
+    loadData();
+    Get.back();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +88,11 @@ class _DaftarBukuPageState extends State<DaftarBukuPage> {
 
                 return GestureDetector(
                   onTap: () {
-                    Get.to(() => DetailBukuPage(data: data, bukuID: data['id'], emailUser: 'email',));
+                    Get.to(() => DetailBukuPage(
+                          data: data,
+                          bukuID: data['id'],
+                          emailUser: 'email',
+                        ));
                   },
                   child: Card(
                     elevation: 4,
@@ -73,7 +106,8 @@ class _DaftarBukuPageState extends State<DaftarBukuPage> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: data['gambar'] != null && data['gambar'].isNotEmpty
+                            child: data['gambar'] != null &&
+                                    data['gambar'].isNotEmpty
                                 ? Image.memory(
                                     base64Decode(data['gambar']),
                                     width: 80,
@@ -84,7 +118,8 @@ class _DaftarBukuPageState extends State<DaftarBukuPage> {
                                     width: 80,
                                     height: 100,
                                     color: Colors.grey[300],
-                                    child: Icon(Icons.image, size: 50, color: Colors.grey[600]),
+                                    child: Icon(Icons.image,
+                                        size: 50, color: Colors.grey[600]),
                                   ),
                           ),
                           const SizedBox(width: 12),
@@ -104,13 +139,21 @@ class _DaftarBukuPageState extends State<DaftarBukuPage> {
                                 const SizedBox(height: 4),
                                 Text(
                                   "Penulis: ${data['penulis'] ?? 'Tidak diketahui'}",
-                                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey[700]),
                                 ),
                                 Text(
                                   "Tahun: ${data['tahunterbit'] ?? '-'}",
-                                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey[700]),
                                 ),
                               ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => validationDelete(data['id']),
+                            icon: const Icon(
+                              Icons.delete,
                             ),
                           ),
                         ],

@@ -16,9 +16,10 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   GetStorage box = GetStorage();
+  bool password = true;
 
   TextEditingController emailController = TextEditingController(),
-  passwordController = TextEditingController(); 
+      passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -56,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
       box.write('email', email);
       Get.offAll(() => const HomePage());
     }
-  } 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +76,16 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextFormField(
               controller: passwordController,
+              obscureText: password,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Password',
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => password = !password),
+                  icon: Icon(password
+                      ? Icons.remove_red_eye
+                      : Icons.remove_red_eye_outlined),
+                ),
               ),
             ),
             ElevatedButton(
@@ -86,12 +94,15 @@ class _LoginPageState extends State<LoginPage> {
                 passwordController.text,
               ),
               style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-              child: Text('Login', style: TextStyle(color: Colors.white),),
+                backgroundColor: Colors.lightBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+              child: Text(
+                'Login',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

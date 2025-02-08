@@ -11,12 +11,12 @@ class DetailBukuPage extends StatefulWidget {
   final String bukuID;
   final String emailUser;
 
-  const DetailBukuPage({
-    Key? key,
-    required this.data,
-    required this.bukuID,
-    required this.emailUser,
-  }) : super(key: key);
+  const DetailBukuPage(
+      {Key? key,
+      required this.data,
+      required this.bukuID,
+      required this.emailUser})
+      : super(key: key);
 
   @override
   State<DetailBukuPage> createState() => _DetailBukuPageState();
@@ -41,40 +41,74 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
   }
 
   Future<void> pinjamBuku() async {
-  if (selectedReturnDate == null) {
+    if (selectedReturnDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Pilih tanggal pengembalian terlebih dahulu")),
+      );
+      return;
+    }
+
+    // Simpan data peminjaman ke Firebase
+    DocumentReference docRef =
+        await FirebaseFirestore.instance.collection('peminjaman').add({
+      'idBuku': widget.bukuID,
+      'email': widget.emailUser,
+      'tanggalPeminjaman': DateTime.now(),
+      'tanggalPengembalian': null,
+      'batasPengembalian': selectedReturnDate,
+      'judul': widget.data['judul'],
+    });
+
+    await docRef.update({'idPeminjaman': docRef.id});
+
+    FirebaseFirestore.instance.collection('buku').doc(widget.bukuID).update({
+      'stok': FieldValue.increment(-1),
+    });
+
+    // --- Fungsi Tidak Digunakan Karena ditaruh pada Peminjaman Page ---
+    // await FirebaseFirestore.instance.collection('histori').add({
+    //   'idBuku': widget.bukuID,
+    //   'email': widget.emailUser,
+    //   'judulBuku': widget.data['judul'],
+    //   'tanggalPeminjaman': DateTime.now(),
+    //   'tanggalPengembalian': null,
+    //   'aksi': 'peminjaman',
+    // });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Pilih tanggal pengembalian terlebih dahulu")),
+      SnackBar(content: Text("Buku berhasil dipinjam")),
     );
-    return;
+
+    Get.back();
   }
 
-  // Simpan data peminjaman ke Firebase
-  DocumentReference docRef = await FirebaseFirestore.instance.collection('peminjaman').add({
-    'idBuku': widget.bukuID,
-    'email': widget.emailUser,
-    'tanggalPeminjaman': DateTime.now(),
-    'tanggalPengembalian': null,
-    'batasPengembalian': selectedReturnDate,
-  });
+  void cekStok() {
+    if (widget.data['stok'] == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Stok Buku Kosong")),
+      );
+    } else {
+      pinjamBuku();
+    }
+  }
 
-  await docRef.update({'idPeminjaman': docRef.id});
+  void cekPernahDipinjam() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('peminjaman')
+        .where('email', isEqualTo: widget.emailUser)
+        .get();
 
-  // Simpan histori peminjaman
-  await FirebaseFirestore.instance.collection('histori').add({
-    'idBuku': widget.bukuID,
-    'email': widget.emailUser,
-    'judulBuku': widget.data['judul'],
-    'tanggalPeminjaman': DateTime.now(),
-    'tanggalPengembalian': null,
-    'aksi': 'peminjaman',
-  });
+    List<String> listJudul =
+        querySnapshot.docs.map((doc) => doc['judul'] as String).toList();
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text("Buku berhasil dipinjam")),
-  );
-
-  Get.back();
-}
+    if (listJudul.contains(widget.data['judul'])) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Buku Sudah Dipinjam")),
+      );
+    } else {
+      cekStok();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,8 +157,13 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
                 style: TextStyle(fontSize: 16)),
             Text('Deskripsi: ${widget.data['deskripsi']}',
                 style: TextStyle(fontSize: 16)),
+            Text(
+              'Stok Buku: ${widget.data['stok']}',
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
             SizedBox(height: 14),
-
 
             // BAGIAN ULASAN BUKU
             Text(
@@ -136,7 +175,7 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
               children: [
                 IconButton(
                   onPressed: () {
-                    Get.to(() => UlasanBukuPage(bukuID: 'idbuku'));
+                    Get.to(() => UlasanBukuPage(bukuID: widget.data['idbuku']));
                   },
                   icon: Icon(Icons.rate_review),
                 ),
@@ -162,7 +201,7 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
             // Tombol Pinjam Buku
             Center(
               child: ElevatedButton(
-                onPressed: pinjamBuku,
+                onPressed: cekPernahDipinjam,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.lightBlue,
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -177,20 +216,3 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
   }
 }
 
-// BAGIAN ULASAN BUKU
-            // Text(
-            //   'Ulasan Buku',
-            //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            // ),
-            // SizedBox(height: 8),
-            // Row(
-            //   children: [
-            //     IconButton(
-            //       onPressed: () {
-            //         Get.to(() => UlasanBukuPage(bukuID: 'idbuku'));
-            //       },
-            //       icon: Icon(Icons.rate_review),
-            //     ),
-            //     Text('Ulasan'),
-            //   ],
-            // ),

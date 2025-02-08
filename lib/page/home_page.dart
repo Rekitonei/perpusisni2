@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                   userEmail == "petugas01@gmail.com",
               child: ListTile(
                 leading: const Icon(Icons.perm_contact_cal),
-                title: const Text('Histori Pengguna'),
+                title: const Text('Histori Semua User'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -124,17 +124,18 @@ class _HomePageState extends State<HomePage> {
               onTap: () =>
                   Get.to(() => HistoriPage(emailUser: userEmail ?? 'guest')),
             ),
-            
             ListTile(
               leading: const Icon(Icons.book),
               title: const Text('Peminjaman'),
               onTap: () =>
-                  Get.to(() => PeminjamanPage(emailUser: userEmail ?? '')),
+                  Get.to(() => PeminjamanPage(emailUser: userEmail ?? ''))
+                      ?.then((_) => loadData()),
             ),
             ListTile(
               leading: const Icon(Icons.menu_book_rounded),
               title: const Text('Daftar Buku'),
-              onTap: () => Get.to(() => DaftarBukuPage()),
+              onTap: () =>
+                  Get.to(() => DaftarBukuPage())?.then((_) => loadData()),
             ),
             ListTile(
               leading: const Icon(Icons.logout_outlined),
@@ -176,11 +177,12 @@ class _HomePageState extends State<HomePage> {
 
                   return GestureDetector(
                     onTap: () {
+                      log(data['id']);
                       Get.to(() => DetailBukuPage(
                             data: data,
                             bukuID: data['id'],
                             emailUser: userEmail ?? '',
-                          ));
+                          ))?.then((_) => loadData());
                     },
                     child: Container(
                       padding: EdgeInsets.all(8),

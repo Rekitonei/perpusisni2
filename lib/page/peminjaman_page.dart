@@ -18,15 +18,15 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
       FirebaseFirestore.instance.collection('buku');
 
   // Fungsi mengembalikan buku
-  Future<void> kembalikanBuku(String idPeminjaman) async {
+  Future<void> kembalikanBuku(String idPeminjaman, String idBuku) async {
     final DocumentReference peminjamanDoc = peminjamanRef.doc(idPeminjaman);
+    final DocumentReference bukuDoc = bukuRef.doc(idBuku);
 
     try {
       await peminjamanDoc.update({'tanggalPengembalian': DateTime.now()});
 
-      // Ambil data peminjaman untuk dipindahkan ke histori
-      DocumentSnapshot snapshot = await peminjamanDoc.get();
-      Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+      // Tambah stok buku
+      await bukuDoc.update({'stok': FieldValue.increment(1)});
 
       // Pindahkan data ke histori
       await pindahkanKeHistori(idPeminjaman);
@@ -38,20 +38,19 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
   }
 
   // Fungsi mengambil judul buku berdasarkan idBuku
-  Future<String> getJudulBuku(String idBuku) async {
-    DocumentSnapshot bukuDoc = await bukuRef.doc(idBuku).get();
-    if (bukuDoc.exists) {
-      return bukuDoc['judul'];
-    }
-    return "Judul Tidak Ditemukan";
-  }
+  // Future<String> getJudulBuku(String idBuku) async {
+  //   DocumentSnapshot bukuDoc = await bukuRef.doc(idBuku).get();
+  //   if (bukuDoc.exists) {
+  //     return bukuDoc['judul'];
+  //   }
+  //   return "Judul Tidak Ditemukan";
+  // }
 
   // Fungsi untuk memindahkan data peminjaman yang sudah dikembalikan ke histori
   Future<void> pindahkanKeHistori(String idPeminjaman) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     final DocumentReference peminjamanDoc =
         firestore.collection('peminjaman').doc(idPeminjaman);
-    final CollectionReference historiRef = firestore.collection('histori');
 
     try {
       await firestore.runTransaction((transaction) async {
@@ -67,13 +66,14 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
           throw Exception("Buku belum dikembalikan.");
         }
 
-        await historiRef.add({
+        await FirebaseFirestore.instance.collection('histori').add({
           'idPeminjaman': idPeminjaman,
           'idBuku': data['idBuku'],
           'email': data['email'],
           'tanggalPeminjaman': data['tanggalPeminjaman'],
           'tanggalPengembalian': data['tanggalPengembalian'],
           'batasPengembalian': data['batasPengembalian'],
+          'judul': data['judul'],
         });
 
         transaction.delete(peminjamanDoc);
@@ -114,35 +114,22 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             children: snapshot.data!.docs.map((doc) {
               Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-              return FutureBuilder<String>(
-                future: getJudulBuku(data['idBuku']),
-                builder: (context, bukuSnapshot) {
-                  if (bukuSnapshot.connectionState == ConnectionState.waiting) {
-                    return Card(
-                      child: ListTile(
-                        title: Text("Memuat judul..."),
-                        subtitle: Text("Tunggu sebentar"),
-                      ),
-                    );
-                  }
-
-                  return Card(
-                    child: ListTile(
-                      title: Text("Judul: ${bukuSnapshot.data}"),
-                      subtitle: Text(
-                        "Pengembalian: ${DateFormat('yyyy-MM-dd').format(data['batasPengembalian'].toDate())}"
-                        "Dipinjam: ${DateFormat('yyyy-MM-dd').format(data['tanggalPeminjaman'].toDate())}\n"
-                        "Dikembalikan: ${data['tanggalPengembalian'] == null ? 'Belum dikembalikan' : DateFormat('yyyy-MM-dd').format(data['tanggalPengembalian'].toDate())}",
-                      ),
-                      trailing: data['tanggalPengembalian'] == null
-                          ? IconButton(
-                              icon: Icon(Icons.undo, color: Colors.red),
-                              onPressed: () => kembalikanBuku(doc.id),
-                            )
-                          : Icon(Icons.check, color: Colors.green),
-                    ),
-                  );
-                },
+              return Card(
+                child: ListTile(
+                  title: Text("Judul: ${data['judul']}"),
+                  subtitle: Text(
+                    "Pengembalian: ${DateFormat('yyyy-MM-dd').format(data['batasPengembalian'].toDate())}"
+                    "Dipinjam: ${DateFormat('yyyy-MM-dd').format(data['tanggalPeminjaman'].toDate())}\n"
+                    "Dikembalikan: ${data['tanggalPengembalian'] == null ? 'Belum dikembalikan' : DateFormat('yyyy-MM-dd').format(data['tanggalPengembalian'].toDate())}",
+                  ),
+                  trailing: data['tanggalPengembalian'] == null
+                      ? IconButton(
+                          icon: Icon(Icons.undo, color: Colors.red),
+                          onPressed: () =>
+                              kembalikanBuku(doc.id, data['idBuku']),
+                        )
+                      : Icon(Icons.check, color: Colors.green),
+                ),
               );
             }).toList(),
           );

@@ -21,7 +21,8 @@ class _TambahBukuPageState extends State<TambahBukuPage> {
       penulis = TextEditingController(),
       penerbit = TextEditingController(),
       tahunterbit = TextEditingController(),
-      deskripsi =TextEditingController();
+      deskripsi =TextEditingController(),
+      stok = TextEditingController();
 
   String imageBase64 = '';
 
@@ -73,6 +74,7 @@ class _TambahBukuPageState extends State<TambahBukuPage> {
       'tahunterbit': tahunterbit.text,
       'deskripsi': deskripsi.text,
       'gambar': imageBase64,
+      'stok': int.tryParse(stok.text) ?? 0,
     });
 
     Get.back(result: true);
@@ -110,6 +112,11 @@ class _TambahBukuPageState extends State<TambahBukuPage> {
                         fit: BoxFit.cover,
                       ),
               ),
+            ),
+            TextFormField(
+              controller: stok, // Input stok
+              decoration: InputDecoration(hintText: 'Stok Buku'),
+              keyboardType: TextInputType.number,
             ),
             TextFormField(
               controller: judul,

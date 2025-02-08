@@ -7,19 +7,6 @@ class HistoriPage extends StatelessWidget {
 
   const HistoriPage({Key? key, required this.emailUser}) : super(key: key);
 
-  Future<String> getJudulBuku(String idBuku) async {
-    try {
-      DocumentSnapshot bukuDoc =
-          await FirebaseFirestore.instance.collection('buku').doc(idBuku).get();
-      if (bukuDoc.exists) {
-        return bukuDoc['judul'];
-      }
-    } catch (e) {
-      print("Error mengambil judul buku: $e");
-    }
-    return "Judul Tidak Ditemukan";
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,22 +52,17 @@ class HistoriPage extends StatelessWidget {
               DateTime dikembalikan =
                   tanggalPengembalian?.toDate() ?? DateTime.now();
 
-              return FutureBuilder<String>(
-                future: getJudulBuku(data['idBuku']),
-                builder: (context, bukuSnapshot) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        "Judul: ${bukuSnapshot.data ?? 'Tidak ditemukan'}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "Dipinjam: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(dipinjam)}\n"
-                        "Dikembalikan: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(dikembalikan)}",
-                      ),
-                    ),
-                  );
-                },
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    "Judul: ${data['judul'] ?? 'Tidak ditemukan'}",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    "Dipinjam: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(dipinjam)}\n"
+                    "Dikembalikan: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(dikembalikan)}",
+                  ),
+                ),
               );
             },
           );
