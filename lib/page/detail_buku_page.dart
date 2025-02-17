@@ -92,23 +92,44 @@ class _DetailBukuPageState extends State<DetailBukuPage> {
     }
   }
 
-  void cekPernahDipinjam() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('peminjaman')
-        .where('email', isEqualTo: widget.emailUser)
+
+    void cekPernahDipinjam() async {
+    // Ambil data stok terbaru dari Firestore
+    DocumentSnapshot bukuSnapshot = await FirebaseFirestore.instance
+        .collection('buku')
+        .doc(widget.bukuID)
         .get();
 
-    List<String> listJudul =
-        querySnapshot.docs.map((doc) => doc['judul'] as String).toList();
+    int stokTersedia = (bukuSnapshot.data() as Map<String, dynamic>)['stok'] ?? 0;
 
-    if (listJudul.contains(widget.data['judul'])) {
+    if (stokTersedia == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Buku Sudah Dipinjam")),
+        SnackBar(content: Text("Stok Buku Kosong")),
       );
-    } else {
-      cekStok();
+      return;
     }
+
+    // Jika stok masih tersedia, langsung lanjutkan ke peminjaman
+    cekStok();
   }
+
+  // void cekPernahDipinjam() async {
+  //   QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+  //       .collection('peminjaman')
+  //       .where('email', isEqualTo: widget.emailUser)
+  //       .get();
+
+  //   List<String> listJudul =
+  //       querySnapshot.docs.map((doc) => doc['judul'] as String).toList();
+
+  //   if (listJudul.contains(widget.data['judul'])) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Buku Sudah Dipinjam")),
+  //     );
+  //   } else {
+  //     cekStok();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
